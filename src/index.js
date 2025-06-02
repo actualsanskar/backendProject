@@ -1,8 +1,16 @@
-import mongoose from 'mongoose';
-import express from 'express';
-
+import dotenv from 'dotenv';
 import connectDB from './db/db.js'
-const app = express();
+import {app} from './app.js'
 
-connectDB()
+dotenv.config();
+
+
+connectDB().then(()=> {
+    app.listen(process.env.PORT || 8000, ()=> {
+        console.log("Server started successfully at port: ", process.env.PORT);
+    })
+}).catch((err)=> {
+    console.log(`MongoDB not connected because of error: ${err}`);
+    
+})
 
