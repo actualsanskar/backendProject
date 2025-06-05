@@ -6,15 +6,18 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 const generateAccessAndRefreshTokens = async (user) => {
     try {
-        const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateRefreshToken();
+        const accessToken = await user.generateAccessToken();
+        const refreshToken = await user.generateRefreshToken();
 
+        // console.log("Before save - RefreshToken:", refreshToken);
+        
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
 
         return { accessToken, refreshToken };
 
     } catch (error) {
+        console.error("Token generation error:", error);
         throw new ApiError(500, "something went wrong while generating access or refresh tokens")
     }
 }
@@ -30,6 +33,8 @@ const registerUser = asyncHandler(async (req, res, next) => {
     // the user is successfully registered ✅
 
     const { username, email, fullName, password } = req.body;
+    // console.log(email);
+    
 
     if ([username, email, fullName, password].some((field) => field.trim() === "")) {
         throw new ApiError(400, "all fields are required");
@@ -42,6 +47,9 @@ const registerUser = asyncHandler(async (req, res, next) => {
     if (exisingUser) {
         throw new ApiError(409, "User with email or username already exist!")
     }
+
+    console.log(req.files);
+    
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
 
@@ -95,9 +103,11 @@ const loginUser = asyncHandler(async (req, res, next) => {
     // if yes then generate access token and refresh token ✅
     // send cookie ✅
 
+    // console.log(req.body);
     const { email, username, password } = req.body;
+    
 
-    if (email || username) {
+    if (!(email && username)) {
         throw new ApiError(401, "email or username is required!")
     }
 
@@ -109,20 +119,23 @@ const loginUser = asyncHandler(async (req, res, next) => {
         throw new ApiError(401, "user doesn't exist!")
     }
 
-    const checkPassword = user.isPasswordCorrect(password)
+    
+    const checkPassword = await user.isPasswordCorrect(password)
 
     if (!checkPassword) {
         throw new ApiError(401, "Invaid user credentials")
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
-
-    const loggedInUser = user.select("-refreshToken -password")
-
+    
+    const loggedInUser = await User.findById(user._id).select( "-password -refreshToken" )
+    
     const options = {
         httpOnly: true,
         secure: true
     }
+
+
 
     res.status(200)
         .cookie("accessToken", accessToken, options)

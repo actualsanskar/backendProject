@@ -10,12 +10,15 @@ import { User } from "../models/user.model.js";
 // if yes then return the user as it's verified + next middleware
 
 const verify_JWT = asyncHandler(async (req, _, next)=> {
-    const token = req.cookies?.token ||req.header("authorization")?.replace("Bearer ", "");
+    const token = req.cookies?.accessToken || req.header("authorization")?.replace("Bearer ", "");
+    console.log(token);
+    
 
     if(!token){
         throw new ApiError(400, "Unauthorized request!");
     }
 
+    
     const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
     const user = User.findById(decodedToken?._id).select("-password -refreshToken");
