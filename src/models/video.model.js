@@ -2,7 +2,7 @@ import mongoose, { mongo } from "mongoose";
 
 
 
-const videoSchema = mongoose.Schema(
+const videoSchema = new mongoose.Schema(
     {
         title: {
             type: String,
@@ -41,9 +41,6 @@ const videoSchema = mongoose.Schema(
         }
     }, {timestamps: true}
 )
-
-
-
 
 
 export const Video = mongoose.model("Video", videoSchema)
