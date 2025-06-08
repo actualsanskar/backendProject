@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from 'fs';
+import { ApiError } from "./ApiError.js";
 
 // Configuration
 cloudinary.config({
@@ -11,7 +12,7 @@ cloudinary.config({
 const uploadOnCloudinary = async (localFilePath) => {
     try {
 
-        if(!localFilePath) return null;
+        if (!localFilePath) return null;
 
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto",
@@ -29,4 +30,20 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-export {uploadOnCloudinary}; 
+const deleteFromCloudinary = async (url) => {
+    try {
+        const urlParts = url.split('/');
+        const lastPart = urlParts[urlParts.length - 1];
+        const public_id = lastPart.split('.')[0];
+        if (!public_id) {
+            throw new ApiError(500, "No public_id provided");
+        }
+
+        await cloudinary.uploader.destroy(public_id);
+    } catch (error) {
+        console.log(`error: ${error.message}`);
+
+    }
+}
+
+export { uploadOnCloudinary, deleteFromCloudinary }; 

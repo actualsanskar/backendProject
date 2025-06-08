@@ -90,8 +90,6 @@ userSchema.methods.generateRefreshToken = async function () {
     )
 }
 
-
-
 userSchema.plugin(mongooseAggregatePaginate)
 
 
